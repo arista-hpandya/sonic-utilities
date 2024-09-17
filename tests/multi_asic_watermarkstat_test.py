@@ -71,6 +71,9 @@ class TestWatermarkstatMultiAsic(object):
     def test_show_queue_unicast_wm_one_masic(self):
         self.executor(testData['show_q_wm_unicast_one_masic'])
 
+    def test_show_uni_voq_one_masic(self):
+        self.executor(testData['show_q_wm_unicast_voq_one_masic'])
+
     def test_show_queue_unicast_wm_all_masic(self):
         self.executor(testData['show_q_wm_unicast_all_masic'])
 

@@ -413,6 +413,34 @@ Ethernet4        0        0      0   1986   2567      0      0      0      0    
 Ethernet8        0        0   1040      0      0      0      0      0   8528   7696
 """
 
+show_queue_wm_unicast_voq_output = """\
+Egress shared pool occupancy per unicast queue: (voq)
+            Port      UC0    UC1    UC2    UC3    UC4    UC5    UC6      UC7
+----------------  -------  -----  -----  -----  -----  -----  -----  -------
+testsw|Ethernet0  2057328    228      2     57   2058      8      2  2057328
+testsw|Ethernet4      N/A    N/A    N/A    N/A    N/A    N/A    N/A      N/A
+testsw|Ethernet8      N/A    N/A    N/A    N/A    N/A    N/A    N/A      N/A
+"""
+
+show_queue_pwm_unicast_voq_output = """\
+Egress shared pool occupancy per unicast queue: (voq)
+            Port    UC0    UC1    UC2    UC3    UC4    UC5    UC6    UC7
+----------------  -----  -----  -----  -----  -----  -----  -----  -----
+testsw|Ethernet0    N/A    N/A    N/A    N/A    N/A    N/A    N/A    N/A
+testsw|Ethernet4    N/A    N/A    N/A    N/A    N/A    N/A    N/A    N/A
+testsw|Ethernet8    N/A    N/A    N/A    N/A    N/A    N/A    N/A    N/A
+"""
+
+show_queue_wm_unicast_voq_output_one_masic = """\
+Egress shared pool occupancy per unicast queue: (voq) (Namespace asic0)
+       Port    UC0    UC1      UC2    UC3    UC4    UC5    UC6      UC7
+-----------  -----  -----  -------  -----  -----  -----  -----  -------
+  Ethernet0   2028     32  2057328     58   2058    328      2  2057328
+  Ethernet4      0      0        0      0      0      0      0        0
+EthernetBP0      0      0        0      0      0      0      0        0
+EthernetBP4      0      0        0      0      0      0      0        0
+"""
+
 show_queue_pwm_unicast_output="""\
 Egress shared pool occupancy per unicast queue:
      Port      UC0      UC1    UC2    UC3    UC4    UC5    UC6    UC7    UC8    UC9
@@ -471,14 +499,14 @@ Shared pool maximum occupancy:
 ingress_lossless_pool     4000
 """
 
-show_hdrm_pool_wm_output="""\
+show_hdrm_pool_wm_output = """\
 Headroom pool maximum occupancy:
                  Pool    Bytes
 ---------------------  -------
 ingress_lossless_pool   432640
 """
 
-show_hdrm_pool_persistent_wm_output="""\
+show_hdrm_pool_persistent_wm_output = """\
 Headroom pool maximum occupancy:
                  Pool    Bytes
 ---------------------  -------
@@ -486,18 +514,18 @@ ingress_lossless_pool   863616
 """
 
 testData = {
-             'show_pg_wm_shared' :  [ {'cmd' : ['priority-group', 'watermark', 'shared'],
-                                       'rc_output': show_pg_wm_shared_output
-                                      }
-                                    ],
-             'show_pg_wm_hdrm' :  [ {'cmd' : ['priority-group', 'watermark', 'headroom'],
-                                     'rc_output': show_pg_wm_hdrm_output
+             'show_pg_wm_shared': [{'cmd': ['priority-group', 'watermark', 'shared'],
+                                    'rc_output': show_pg_wm_shared_output
                                     }
-                                  ],
+                                   ],
+             'show_pg_wm_hdrm': [{'cmd': ['priority-group', 'watermark', 'headroom'],
+                                  'rc_output': show_pg_wm_hdrm_output
+                                  }
+                                 ],
              'show_pg_pwm_shared':  [{'cmd': ['priority-group', 'persistent-watermark', 'shared'],
                                       'rc_output': show_pg_persistent_wm_shared_output
                                       }
-                                    ],
+                                     ],
              'show_pg_pwm_hdrm': [{'cmd': ['priority-group', 'persistent-watermark', 'headroom'],
                                    'rc_output': show_pg_persistent_wm_hdrm_output
                                    }
@@ -506,6 +534,16 @@ testData = {
                                      'rc_output': show_queue_wm_unicast_output
                                      }
                                     ],
+             'show_q_wm_unicast_voq':  [{'cmd': ['queue', 'watermark', 'unicast'],
+                                         'args': ['-V'],
+                                         'rc_output': show_queue_wm_unicast_voq_output
+                                         }
+                                        ],
+             'show_q_pwm_unicast_voq':  [{'cmd': ['queue', 'persistent-watermark', 'unicast'],
+                                          'args': ['-V'],
+                                          'rc_output': show_queue_pwm_unicast_voq_output
+                                          }
+                                         ],
              'show_q_pwm_unicast': [{'cmd': ['queue', 'persistent-watermark', 'unicast'],
                                      'rc_output': show_queue_pwm_unicast_output
                                      }
@@ -587,6 +625,11 @@ testData = {
                                               'rc_output': show_queue_wm_unicast_output_one_masic
                                               }
                                              ],
+             'show_q_wm_unicast_voq_one_masic': [{'cmd': ['queue', 'watermark', 'unicast'],
+                                                  'args': ['-V', '--namespace', 'asic0'],
+                                                  'rc_output': show_queue_wm_unicast_voq_output_one_masic
+                                                  }
+                                                 ],
              'show_q_wm_unicast_all_masic': [{'cmd': ['queue', 'watermark', 'unicast'],
                                               'rc_output': show_queue_wm_unicast_output_all_masic
                                               }

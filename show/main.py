@@ -783,6 +783,11 @@ def watermark():
 
 # 'unicast' subcommand ("show queue watermarks unicast")
 @watermark.command('unicast')
+@click.option('-V',
+              '--voq',
+              is_flag=True,
+              default=False,
+              help="Enable watermark stats for VOQ")
 @click.option('--namespace',
               '-n',
               'namespace',
@@ -791,12 +796,15 @@ def watermark():
               show_default=True,
               help='Namespace name or all',
               callback=multi_asic_util.multi_asic_namespace_validation_callback)
-def wm_q_uni(namespace):
+def wm_q_uni(namespace, voq):
     """Show user WM for unicast queues"""
     command = ['watermarkstat', '-t', 'q_shared_uni']
     if namespace is not None:
         command += ['-n', str(namespace)]
+    if voq:
+        command += ['-V']
     run_command(command)
+
 
 # 'multicast' subcommand ("show queue watermarks multicast")
 @watermark.command('multicast')
@@ -814,6 +822,7 @@ def wm_q_multi(namespace):
     if namespace is not None:
         command += ['-n', str(namespace)]
     run_command(command)
+
 
 # 'all' subcommand ("show queue watermarks all")
 @watermark.command('all')
@@ -836,13 +845,20 @@ def wm_q_all(namespace):
 # 'persistent-watermarks' subgroup ("show queue persistent-watermarks ...")
 #
 
+
 @queue.group(name='persistent-watermark')
 def persistent_watermark():
     """Show persistent WM for queues"""
     pass
 
+
 # 'unicast' subcommand ("show queue persistent-watermarks unicast")
 @persistent_watermark.command('unicast')
+@click.option('-V',
+              '--voq',
+              is_flag=True,
+              default=False,
+              help="Enable watermark stats for VOQ")
 @click.option('--namespace',
               '-n',
               'namespace',
@@ -851,12 +867,15 @@ def persistent_watermark():
               show_default=True,
               help='Namespace name or all',
               callback=multi_asic_util.multi_asic_namespace_validation_callback)
-def pwm_q_uni(namespace):
+def pwm_q_uni(namespace, voq):
     """Show persistent WM for unicast queues"""
     command = ['watermarkstat', '-p', '-t', 'q_shared_uni']
     if namespace is not None:
         command += ['-n', str(namespace)]
+    if voq:
+        command += ['-V']
     run_command(command)
+
 
 # 'multicast' subcommand ("show queue persistent-watermarks multicast")
 @persistent_watermark.command('multicast')
@@ -896,14 +915,17 @@ def pwm_q_all(namespace):
 # 'priority-group' group ("show priority-group ...")
 #
 
+
 @cli.group(name='priority-group', cls=clicommon.AliasedGroup)
 def priority_group():
     """Show details of the PGs """
+
 
 @priority_group.group()
 def watermark():
     """Show priority-group user WM"""
     pass
+
 
 @watermark.command('headroom')
 @click.option('--namespace',
@@ -921,6 +943,7 @@ def wm_pg_headroom(namespace):
         command += ['-n', str(namespace)]
     run_command(command)
 
+
 @watermark.command('shared')
 @click.option('--namespace',
               '-n',
@@ -937,10 +960,12 @@ def wm_pg_shared(namespace):
         command += ['-n', str(namespace)]
     run_command(command)
 
+
 @priority_group.group()
 def drop():
     """Show priority-group"""
     pass
+
 
 @drop.command('counters')
 @multi_asic_util.multi_asic_click_option_namespace
@@ -951,10 +976,12 @@ def pg_drop_counters(namespace):
         command += ['-n', str(namespace)]
     run_command(command)
 
+
 @priority_group.group(name='persistent-watermark')
 def persistent_watermark():
     """Show priority-group persistent WM"""
     pass
+
 
 @persistent_watermark.command('headroom')
 @click.option('--namespace',
@@ -998,6 +1025,7 @@ def pwm_pg_shared(namespace):
 def buffer_pool():
     """Show details of the buffer pools"""
 
+
 @buffer_pool.command('watermark')
 @click.option('--namespace',
               '-n',
@@ -1039,6 +1067,7 @@ def pwm_buffer_pool(namespace):
 @cli.group(name='headroom-pool', cls=clicommon.AliasedGroup)
 def headroom_pool():
     """Show details of headroom pool"""
+
 
 @headroom_pool.command('watermark')
 @click.option('--namespace',

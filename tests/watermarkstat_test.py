@@ -37,6 +37,9 @@ class TestWatermarkstat(object):
     def test_show_queue_unicast_wm(self):
         self.executor(testData['show_q_wm_unicast'])
 
+    def test_show_queue_unicast_voq_wm(self):
+        self.executor(testData['show_q_wm_unicast_voq'])
+
     def test_show_queue_multicast_wm(self):
         self.executor(testData['show_q_wm_multicast'])
 
@@ -60,6 +63,9 @@ class TestWatermarkstat(object):
 
     def test_show_queue_unicast_persistent_wm(self):
         self.executor(testData['show_q_pwm_unicast'])
+
+    def test_show_queue_unicast_voq_persistent_wm(self):
+        self.executor(testData['show_q_pwm_unicast_voq'])
 
     def test_show_queue_multicast_persistent_wm(self):
         self.executor(testData['show_q_pwm_multicast'])
