@@ -42,7 +42,7 @@ from utilities_common.cli import json_serial, UserCache
 
 PStats = namedtuple("PStats", "pfc0, pfc1, pfc2, pfc3, pfc4, pfc5, pfc6, pfc7")
 header_Rx = ['Port Rx', 'PFC0', 'PFC1', 'PFC2', 'PFC3', 'PFC4', 'PFC5', 'PFC6', 'PFC7']
-
+header_Rx_history = ['Port Rx', 'Priority', 'Total RX Pause Transitions', 'Max RX Pause Transitions', 'Max RX Pause Timestamp', 'Total RX Pause Time']
 header_Tx = ['Port Tx', 'PFC0', 'PFC1', 'PFC2', 'PFC3', 'PFC4', 'PFC5', 'PFC6', 'PFC7']
 
 counter_bucket_rx_dict = {
@@ -54,6 +54,41 @@ counter_bucket_rx_dict = {
     'SAI_PORT_STAT_PFC_5_RX_PKTS': 5,
     'SAI_PORT_STAT_PFC_6_RX_PKTS': 6,
     'SAI_PORT_STAT_PFC_7_RX_PKTS': 7
+}
+
+counter_bucket_rx_history_dict = {
+    "SAI_PORT_STAT_PFC_0_RX_PAUSE_TRANS": 0,
+    "SAI_PORT_STAT_PFC_0_MAX_RX_PAUSE_TIME": 1,
+    "SAI_PORT_STAT_PFC_0_MAX_RX_PAUSE_TMSP": 3,
+    "SAI_PORT_STAT_PFC_0_TOTAL_RX_PAUSE_TIME": 4,
+    "SAI_PORT_STAT_PFC_1_RX_PAUSE_TRANS": 5,
+    "SAI_PORT_STAT_PFC_1_MAX_RX_PAUSE_TIME": 6,
+    "SAI_PORT_STAT_PFC_1_MAX_RX_PAUSE_TMSP": 7,
+    "SAI_PORT_STAT_PFC_1_TOTAL_RX_PAUSE_TIME": 0,
+    "SAI_PORT_STAT_PFC_2_RX_PAUSE_TRANS": 0,
+    "SAI_PORT_STAT_PFC_2_MAX_RX_PAUSE_TIME": 0,
+    "SAI_PORT_STAT_PFC_2_MAX_RX_PAUSE_TMSP": 0,
+    "SAI_PORT_STAT_PFC_2_TOTAL_RX_PAUSE_TIME": 0,
+    "SAI_PORT_STAT_PFC_3_RX_PAUSE_TRANS": 0,
+    "SAI_PORT_STAT_PFC_3_MAX_RX_PAUSE_TIME": 0,
+    "SAI_PORT_STAT_PFC_3_MAX_RX_PAUSE_TMSP": 0,
+    "SAI_PORT_STAT_PFC_3_TOTAL_RX_PAUSE_TIME": 0,
+    "SAI_PORT_STAT_PFC_4_RX_PAUSE_TRANS": 0,
+    "SAI_PORT_STAT_PFC_4_MAX_RX_PAUSE_TIME": 0,
+    "SAI_PORT_STAT_PFC_4_MAX_RX_PAUSE_TMSP": 0,
+    "SAI_PORT_STAT_PFC_4_TOTAL_RX_PAUSE_TIME": 0,
+    "SAI_PORT_STAT_PFC_5_RX_PAUSE_TRANS": 0,
+    "SAI_PORT_STAT_PFC_5_MAX_RX_PAUSE_TIME": 0,
+    "SAI_PORT_STAT_PFC_5_MAX_RX_PAUSE_TMSP": 0,
+    "SAI_PORT_STAT_PFC_5_TOTAL_RX_PAUSE_TIME": 0,
+    "SAI_PORT_STAT_PFC_6_RX_PAUSE_TRANS": 0,
+    "SAI_PORT_STAT_PFC_6_MAX_RX_PAUSE_TIME": 0,
+    "SAI_PORT_STAT_PFC_6_MAX_RX_PAUSE_TMSP": 0,
+    "SAI_PORT_STAT_PFC_6_TOTAL_RX_PAUSE_TIME": 0,
+    "SAI_PORT_STAT_PFC_7_RX_PAUSE_TRANS": 0,
+    "SAI_PORT_STAT_PFC_7_MAX_RX_PAUSE_TIME": 0,
+    "SAI_PORT_STAT_PFC_7_MAX_RX_PAUSE_TMSP": 0,
+    "SAI_PORT_STAT_PFC_7_TOTAL_RX_PAUSE_TIME": 0,
 }
 
 counter_bucket_tx_dict = {
@@ -72,14 +107,15 @@ COUNTER_TABLE_PREFIX = "COUNTERS:"
 COUNTERS_PORT_NAME_MAP = "COUNTERS_PORT_NAME_MAP"
 
 class Pfcstat(object):
-    def __init__(self, namespace, display):
+    def __init__(self, namespace, display, history):
         self.multi_asic = multi_asic_util.MultiAsic(display, namespace)
         self.db = None
         self.config_db = None
         self.cnstat_dict = OrderedDict()
+        self.history = history
 
     @multi_asic_util.run_on_multi_asic
-    def collect_cnstat(self, rx):
+    def collect_cnstat(self, rx, history=False):
         """
             Get the counters info from database.
         """
@@ -88,6 +124,29 @@ class Pfcstat(object):
                 Get the counters from specific table.
             """
             fields = ["0","0","0","0","0","0","0","0"]
+            if history:
+                bucket_dict = counter_bucket_rx_history_dict
+                cntr = {}
+                for i in range (8):
+                    pfc_number = f"pfc{i}"
+                    cntr[pfc_number] = {}
+                count = 0
+                for counter_name, pos in bucket_dict.items():
+                    full_table_id = COUNTER_TABLE_PREFIX + table_id
+                    counter_data =  self.db.get(
+                        self.db.COUNTERS_DB, full_table_id, counter_name
+                    )
+
+                    pfc_number = "pfc" + str(count // 4)
+                    attr = header_Rx_history[2 + (count % 4)]
+                    count += 1
+
+                    if counter_data is None:
+                        cntr[pfc_number][attr] = STATUS_NA
+                    else:
+                        cntr[pfc_number][attr] = str(counter_data)
+                return cntr
+
             if rx:
                 bucket_dict = counter_bucket_rx_dict
             else:
@@ -102,6 +161,7 @@ class Pfcstat(object):
                 else:
                     fields[pos] = str(int(counter_data))
             cntr = PStats._make(fields)._asdict()
+            # print("HETAV - The cntr dict:", cntr)
             return cntr
 
         # Get the info from database
@@ -126,12 +186,12 @@ class Pfcstat(object):
                     )
             self.cnstat_dict.update(cnstat_dict)
 
-    def get_cnstat(self, rx):
+    def get_cnstat(self, rx, history=False):
         """
             Get the counters info from database.
         """
         self.cnstat_dict.clear()
-        self.collect_cnstat(rx)
+        self.collect_cnstat(rx, history)
         return self.cnstat_dict
 
     def cnstat_print(self, cnstat_dict, rx):
@@ -139,6 +199,20 @@ class Pfcstat(object):
             Print the cnstat.
         """
         table = []
+        if rx and self.history:
+            for key, data in cnstat_dict.items():
+                if key == 'time':
+                    continue
+                for priority, attr in data.items():
+                    table.append((key,
+                              priority,
+                              format_number_with_comma(attr[header_Rx_history[2]]),
+                              format_number_with_comma(attr[header_Rx_history[3]]),
+                              attr[header_Rx_history[4]],
+                              format_number_with_comma(attr[header_Rx_history[5]])))
+
+            print(tabulate(table, header_Rx_history, tablefmt='simple', stralign='right'))
+            return
 
         for key, data in cnstat_dict.items():
             if key == 'time':
@@ -209,6 +283,12 @@ Examples:
   pfcstat -s all -n asic0
 """)
 
+    import sys
+
+    orig_stdout = sys.stdout
+    f = open('debug.txt', 'w')
+    sys.stdout = f
+
     parser.add_argument( '-c', '--clear', action='store_true',
         help='Clear previous stats and save new ones'
     )
@@ -220,6 +300,9 @@ Examples:
     )
     parser.add_argument('-n', '--namespace', default=None,
         help='Display interfaces for specific namespace'
+    )
+    parser.add_argument('-m', '--myhistory', action='store_true',
+        help='Provide stats on the history of the pfc counter'
     )
     parser.add_argument('-v', '--version', action='version', version='%(prog)s 1.0')
     args = parser.parse_args()
@@ -239,7 +322,7 @@ Examples:
         args.namespace = None
         args.show = constants.DISPLAY_ALL
 
-    pfcstat = Pfcstat(args.namespace, args.show)
+    pfcstat = Pfcstat(args.namespace, args.show, args.myhistory)
 
     if delete_all_stats:
         cache.remove()
@@ -247,7 +330,7 @@ Examples:
     """
         Get the counters of pfc rx counter
     """
-    cnstat_dict_rx = deepcopy(pfcstat.get_cnstat(True))
+    cnstat_dict_rx = deepcopy(pfcstat.get_cnstat(True, args.myhistory))
 
     """
         Get the counters of pfc tx counter
@@ -293,6 +376,9 @@ Examples:
             print(e.errno, e)
     else:
         pfcstat.cnstat_print(cnstat_dict_tx, False)
+
+    sys.stdout = orig_stdout
+    f.close()
 
     sys.exit(0)
 

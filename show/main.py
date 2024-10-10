@@ -633,16 +633,20 @@ def pfc():
     """Show details of the priority-flow-control (pfc) """
     pass
 
-# 'counters' subcommand ("show interfaces pfccounters")
+# 'counters' subcommand ("show pfc counters")
 @pfc.command()
 @multi_asic_util.multi_asic_click_options
 @click.option('--verbose', is_flag=True, help="Enable verbose output")
-def counters(namespace, display, verbose):
+@click.option('--pfchistory', is_flag=True, help="Enable history for pfcstat output")
+def counters(namespace, display, verbose, pfchistory):
     """Show pfc counters"""
 
     cmd = ['pfcstat', '-s', str(display)]
     if namespace is not None:
         cmd += ['-n', str(namespace)]
+
+    if pfchistory is not None:
+        cmd += ['--myhistory']
 
     run_command(cmd, display_cmd=verbose)
 
